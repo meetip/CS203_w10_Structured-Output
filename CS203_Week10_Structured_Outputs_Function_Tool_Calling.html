@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS203 Week 10: Structured Outputs, Function Calling & Tool Calling</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
+    <style>
+        /* Base Variables */
+        :root {
+            --color-bg-page: #F8F9FA;
+            --color-bg-content: #FFFFFF;
+            --color-text-primary: #212529;
+            --color-accent-primary: #0D6EFD;
+            --color-accent-secondary: #198754;
+            --color-border: #DEE2E6;
+            --color-code-bg: #E9ECEF;
+            --color-code-text: #343A40;
+            --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-family-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+            --container-max-width: 100;
+            --nav-width: 280px;
+            --spacing-unit: 1rem;
+            --border-radius: 8px;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--color-text-primary);
+            background-color: var(--color-bg-page);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--nav-width);
+            height: 100vh;
+            background-color: var(--color-bg-content);
+            border-right: 1px solid var(--color-border);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-header {
+            padding: 1.5rem 1rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+            background-color: var(--color-accent-primary);
+            color: white;
+        }
+
+        .nav-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            padding: 0;
+        }
+
+        .nav-item {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--color-text-primary);
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+            color: var(--color-accent-primary);
+            padding-left: 1.5rem;
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent-primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--color-accent-secondary);
+        }
+
+        /* Mobile Navigation Toggle */
+        .nav-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background-color: var(--color-accent-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--nav-width);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: var(--container-max-width);
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            background-color: var(--color-bg-content);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .course-info {
+            font-size: 1.1rem;
+            color: var(--color-text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .course-info strong {
+            color: var(--color-accent-primary);
+        }
+
+        /* Content Sections */
+        .content-section {
+            background-color: var(--color-bg-content);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            scroll-margin-top: 2rem;
+        }
+
+        /* Typography Hierarchy */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-accent-primary);
+            line-height: 1.3;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--color-accent-primary);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        h4 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Learning Objectives Special Styling */
+        .learning-objectives {
+            background-color: #F0F8FF;
+            border-left: 4px solid var(--color-accent-primary);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .learning-objectives h3 {
+            color: var(--color-accent-primary);
+            margin-top: 0;
+        }
+
+        /* Code Blocks */
+        pre {
+            background-color: var(--color-code-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: var(--font-family-mono);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: var(--font-family-mono);
+            background-color: var(--color-code-bg);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        thead th {
+            background-color: var(--color-bg-page);
+            border-bottom: 2px solid var(--color-border);
+            text-align: left;
+            padding: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        tbody td {
+            border-bottom: 1px solid var(--color-border);
+            padding: 0.75rem;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--color-bg-page);
+        }
+
+        /* Comparison Tables */
+        .comparison-table {
+            margin: 1.5rem 0;
+        }
+
+        .comparison-table th {
+            background-color: var(--color-accent-primary);
+            color: white;
+            text-align: center;
+        }
+
+        .comparison-table .pros {
+            color: var(--color-accent-secondary);
+            font-weight: 500;
+        }
+
+        .comparison-table .cons {
+            color: #DC3545;
+            font-weight: 500;
+        }
+
+        /* Visual Diagram Container */
+        .visual-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .visual-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .visual-caption {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Conceptual Section Styling */
+        .concept-section {
+            background: linear-gradient(135deg, #F0F8FF 0%, #E6F3FF 100%);
+            border-left: 5px solid var(--color-accent-primary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .concept-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .concept-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .concept-title {
+            color: var(--color-accent-primary);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Principle Box */
+        .principle-box {
+            background-color: #FFF9C4;
+            border-left: 4px solid #FBC02D;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .principle-title {
+            font-weight: 600;
+            color: #E65100;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .comparison-item {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-item h5 {
+            color: var(--color-accent-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, #E8F5E8 0%, #F0FFF0 100%);
+            border-left: 4px solid var(--color-accent-secondary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .analogy-title {
+            font-weight: 600;
+            color: var(--color-accent-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Flow Diagrams */
+        .flow-diagram {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: var(--color-bg-page);
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+
+        .diagram-box {
+            display: inline-block;
+            background-color: var(--color-bg-content);
+            border: 2px solid var(--color-accent-primary);
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            margin: 0.5rem;
+            font-weight: 500;
+            color: var(--color-accent-primary);
+        }
+
+        .diagram-arrow {
+            display: inline-block;
+            margin: 0 0.5rem;
+            color: var(--color-text-primary);
+            font-size: 1.2rem;
+        }
+
+        /* Scroll to Top Button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--color-accent-primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            background-color: #0B5ED7;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        /* Links */
+        a {
+            color: var(--color-accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: border-bottom-color 0.2s ease;
+        }
+
+        a:hover {
+            border-bottom-color: var(--color-accent-primary);
+        }
+
+        /* Focus States for Accessibility */
+        a:focus, button:focus {
+            outline: 2px solid var(--color-accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            :root {
+                --nav-width: 0px;
+            }
+            
+            .nav-sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .nav-sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                padding: 1.5rem;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-section {
+                padding: 1.5rem;
+            }
+            
+            .concept-section {
+                padding: 1.5rem;
+            }
+            
+            .scroll-to-top {
+                bottom: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Print Styles for PDF Conversion */
+        @media print {
+            .nav-sidebar,
+            .nav-toggle,
+            .scroll-to-top {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            body {
+                background-color: white;
+                color: black;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .content-section {
+                box-shadow: none;
+                border: 1px solid #CCCCCC;
+                page-break-inside: avoid;
+                margin-bottom: 1rem;
+            }
+            
+            h1, h2 {
+                color: black;
+            }
+            
+            h2 {
+                page-break-before: auto;
+            }
+            
+            pre, code {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            
+            a {
+                color: black;
+                text-decoration: none;
+                border-bottom: none;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Navigation Toggle -->
+    <button class="nav-toggle" id="navToggle">☰</button>
+
+    <!-- Navigation Sidebar -->
+    <nav class="nav-sidebar" id="navSidebar">
+        <div class="nav-header">
+            <div class="nav-title">CS203 Week 10</div>
+            <div class="nav-subtitle">Navigation</div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#learning-objectives" class="nav-link">Learning Objectives</a>
+            </li>
+            <li class="nav-item">
+                <a href="#open-vs-closed" class="nav-link">Open vs Closed Models</a>
+            </li>
+            <li class="nav-item">
+                <a href="#understanding-problem" class="nav-link">Understanding the Problem</a>
+            </li>
+            <li class="nav-item">
+                <a href="#function-calling-concept" class="nav-link">Function Calling Concept</a>
+            </li>
+            <li class="nav-item">
+                <a href="#function-calling-implementation" class="nav-link">Function Calling Implementation</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tool-calling-architecture" class="nav-link">Tool Calling Architecture</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tool-calling-decision" class="nav-link">Tool Calling Decision Process</a>
+            </li>
+            <li class="nav-item">
+                <a href="#tool-calling-implementation" class="nav-link">Tool Calling Implementation</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#summary" class="nav-link">Summary</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <header class="page-header">
+                <h1>CS203 Week 10: Structured Outputs, Function Calling & Tool Calling</h1>
+                <div class="course-info">
+                    <strong>Course:</strong> CS203 Computer Science Technology<br>
+                    <strong>Duration:</strong> 1.5 hours lecture | 2 hours lab<br>
+                    <strong>Target:</strong> 2nd-year Computer Science students
+                </div>
+            </header>
+
+            <!-- Learning Objectives -->
+            <section id="learning-objectives" class="content-section learning-objectives">
+                <h3>Learning Objectives</h3>
+                <p><strong>By the end of this session, students will be able to:</strong></p>
+                <ol>
+                    <li>Explain why structured output is needed in applications</li>
+                    <li>Implement function calling with JSON schema using LiteLLM</li>
+                    <li>Extend function calling to tool calling (LLM triggers external functions)</li>
+                    <li>Understand agentic AI concepts and LLM orchestration</li>
+                </ol>
+            </section>
+
+            <!-- Section 1: Quick Recap -->
+            <section id="open-vs-closed" class="content-section">
+                <h2>1. Quick Recap: Open vs Closed Models</h2>
+                
+                <h3>Model Comparison Overview</h3>
+                <p>Understanding the fundamental differences between closed and open source language models is crucial for making informed decisions in your applications.</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Closed Models (OpenAI GPT-3.5/4)</th>
+                            <th>Open Models (Mistral 7B, LLaMA 2, Gemma)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Accuracy</strong></td>
+                            <td class="pros">High performance on complex tasks</td>
+                            <td>Variable, improving rapidly</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cost</strong></td>
+                            <td class="cons">Pay-per-use, can be expensive</td>
+                            <td class="pros">Free to use, hosting costs only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Customization</strong></td>
+                            <td class="cons">Limited fine-tuning options</td>
+                            <td class="pros">Full control, extensive fine-tuning</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Privacy</strong></td>
+                            <td class="cons">Data sent to external servers</td>
+                            <td class="pros">Can run locally, full privacy</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deployment</strong></td>
+                            <td class="pros">Simple API integration</td>
+                            <td class="cons">Requires infrastructure setup</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Restrictions</strong></td>
+                            <td class="cons">Usage policies and rate limits</td>
+                            <td class="pros">No usage restrictions</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Today's Setup: Groq API + LiteLLM</h3>
+                <p>For our practical exercises, we'll use:</p>
+                <ul>
+                    <li><strong>Groq API:</strong> Provides free access to various open models with ultra-fast inference</li>
+                    <li><strong>LiteLLM:</strong> Unified interface that works with 100+ language model providers</li>
+                    <li><strong>Benefits:</strong> Free tier, consistent API interface, easy switching between models</li>
+                </ul>
+
+                <h4>Setup Prerequisites</h4>
+                <pre><code class="language-bash"># Install required packages
+pip install litellm groq
+
+# Set up environment variables
+export GROQ_API_KEY="your_groq_api_key_here"</code></pre>
+
+                <pre><code class="language-python"># Basic LiteLLM setup
+from litellm import completion
+import os
+
+# Configure for Groq
+os.environ["GROQ_API_KEY"] = "your_api_key"
+
+# Simple completion example
+response = completion(
+    model="groq/mixtral-8x7b-32768",
+    messages=[{"role": "user", "content": "Hello, world!"}]
+)
+print(response.choices[0].message.content)</code></pre>
+            </section>
+
+            <!-- Section 2: Understanding the Problem -->
+            <section id="understanding-problem" class="content-section">
+                <h2>2. Understanding the Problem</h2>
+
+                <div class="concept-section">
+                    <div class="concept-header">
+                        <span class="concept-icon">🔍</span>
+                        <h3 class="concept-title">Understanding the Problem</h3>
+                    </div>
+                    
+                    <div class="visual-container">
+                        <img src="imgs/structured_vs_unstructured.png" alt="Structured vs Unstructured Output Comparison">
+                        <div class="visual-caption">The challenge: Converting human-readable text into machine-readable data</div>
+                    </div>
+
+                    <div class="principle-box">
+                        <div class="principle-title">💡 Core Principle: "From Human-Readable to Machine-Readable"</div>
+                        <p>Applications need predictable, structured data to function reliably. Free-text responses create parsing challenges, inconsistencies, and potential errors in downstream processing.</p>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <h5>❌ Unstructured Text Problems</h5>
+                            <ul>
+                                <li>Inconsistent formatting across responses</li>
+                                <li>Difficult to extract specific data points</li>
+                                <li>No guarantee of required fields</li>
+                                <li>Complex parsing logic needed</li>
+                            </ul>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>✅ Structured Output Benefits</h5>
+                            <ul>
+                                <li>Predictable JSON format every time</li>
+                                <li>Direct access to data fields</li>
+                                <li>Type safety and validation</li>
+                                <li>Simple integration with applications</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Problem Statement: Why Structured Output Matters</h3>
+                <p>Traditional LLM outputs are free-form text, which creates several challenges in real applications:</p>
+                
+                <ul>
+                    <li><strong>Parsing Difficulty:</strong> Extracting specific data from natural language responses</li>
+                    <li><strong>Inconsistent Formatting:</strong> Models may format the same information differently</li>
+                    <li><strong>Missing Data:</strong> No guarantee all required fields will be present</li>
+                    <li><strong>Type Safety:</strong> No way to ensure data types are correct</li>
+                </ul>
+
+                <h4>Example: The Problem</h4>
+                <pre><code class="language-python"># Problematic approach - parsing free text
+response = completion(
+    model="groq/mixtral-8x7b-32768",
+    messages=[{
+        "role": "user", 
+        "content": "Extract user info: John Doe, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6903060107290c04080005470a0604">[email&#160;protected]</a>, likes laptops"
+    }]
+)
+
+# Response might be:
+# "The user's name is John Doe, email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3852575056785d55595154165b5755">[email&#160;protected]</a>, interested in laptops"
+# OR "Name: John Doe\nEmail: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cba1a4a3a58baea6aaa2a7e5a8a4a6">[email&#160;protected]</a>\nPreferences: laptops"
+# OR "John Doe (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="abc1c4c3c5ebcec6cac2c785c8c4c6">[email&#160;protected]</a>) - laptops"
+
+# How do we reliably parse this?</code></pre>
+            </section>
+
+            <!-- Section 3: Function Calling Concept -->
+            <section id="function-calling-concept" class="content-section">
+                <h2>3. Function Calling Concept</h2>
+
+                <div class="concept-section">
+                    <div class="concept-header">
+                        <span class="concept-icon">💡</span>
+                        <h3 class="concept-title">Function Calling Concept</h3>
+                    </div>
+                    
+                    <div class="visual-container">
+                        <img src="imgs/function_calling_flow.png" alt="Function Calling Concept Flow">
+                        <div class="visual-caption">The conceptual flow: How LLMs understand and map natural language to structured schemas</div>
+                    </div>
+
+                    <div class="principle-box">
+                        <div class="principle-title">🎯 Mental Model: "Teaching LLMs to Fill Forms"</div>
+                        <p>Function calling is like giving an LLM a form template and asking it to extract information from text and fill in the appropriate fields. The LLM understands the structure and populates it with extracted data.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <div class="analogy-title">🌟 Real-World Analogy</div>
+                        <p>Imagine a smart assistant reading a messy email and automatically filling out a contact form. The assistant knows which pieces of information go in which fields because you've provided a clear template.</p>
+                    </div>
+
+                    <h4>How LLMs Map Language to Structure</h4>
+                    <ol>
+                        <li><strong>Schema Understanding:</strong> LLM analyzes the provided JSON schema</li>
+                        <li><strong>Information Extraction:</strong> Identifies relevant data in user input</li>
+                        <li><strong>Type Mapping:</strong> Converts extracted information to correct data types</li>
+                        <li><strong>Validation:</strong> Ensures required fields are populated</li>
+                        <li><strong>JSON Generation:</strong> Returns properly formatted structured output</li>
+                    </ol>
+                </div>
+
+                <h3>Solution: Function Calling with JSON Schema</h3>
+                <p>Function calling allows LLMs to fill structured data formats by defining precise schemas:</p>
+
+                <div class="flow-diagram">
+                    <div class="diagram-box">User Input</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">JSON Schema</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">LLM Processing</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Structured JSON</div>
+                </div>
+
+                <h4>Function Calling Concepts</h4>
+                <ul>
+                    <li><strong>Schema Definition:</strong> Define the exact structure of expected output</li>
+                    <li><strong>Type Validation:</strong> Ensure data types match requirements</li>
+                    <li><strong>Required Fields:</strong> Guarantee essential information is present</li>
+                    <li><strong>Consistent Parsing:</strong> Predictable data structure every time</li>
+                </ul>
+            </section>
+
+            <!-- Section 4: Function Calling Implementation -->
+            <section id="function-calling-implementation" class="content-section">
+                <h2>4. Function Calling Implementation</h2>
+
+                <h3>Practical Examples with Code</h3>
+
+                <h4>Example 1: User Information Extraction</h4>
+                <pre><code class="language-python">from litellm import completion
+import json
+
+# Define the function schema
+user_info_schema = {
+    "type": "function",
+    "function": {
+        "name": "extract_user_info",
+        "description": "Extract structured user information",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Full name of the user"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address"
+                },
+                "preferences": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of product preferences"
+                },
+                "age": {
+                    "type": "integer",
+                    "description": "Age in years, if mentioned"
+                }
+            },
+            "required": ["name", "email"]
+        }
+    }
+}
+
+# Make the function call
+response = completion(
+    model="groq/mixtral-8x7b-32768",
+    messages=[{
+        "role": "user",
+        "content": "Extract info: Sarah Johnson, 28, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f2819380939adc98b2919d9f82939c8bdc919d9f">[email&#160;protected]</a>, loves smartphones and tablets"
+    }],
+    functions=[user_info_schema],
+    function_call={"name": "extract_user_info"}
+)
+
+# Get structured result
+function_args = json.loads(response.choices[0].message.function_call.arguments)
+print(function_args)
+# Output: {
+#   "name": "Sarah Johnson",
+#   "email": "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1d6e7c6f7c7533775d7e72706d7c7364337e7270">[email&#160;protected]</a>", 
+#   "preferences": ["smartphones", "tablets"],
+#   "age": 28
+# }</code></pre>
+
+                <h4>Example 2: Database Query Generation</h4>
+                <pre><code class="language-python"># Schema for generating database queries
+query_schema = {
+    "type": "function",
+    "function": {
+        "name": "generate_sql_query",
+        "description": "Generate SQL query from natural language",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "table": {
+                    "type": "string",
+                    "description": "Primary table to query"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Columns to select"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "column": {"type": "string"},
+                            "operator": {"type": "string"},
+                            "value": {"type": "string"}
+                        }
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results"
+                }
+            },
+            "required": ["table", "columns"]
+        }
+    }
+}
+
+response = completion(
+    model="groq/mixtral-8x7b-32768",
+    messages=[{
+        "role": "user",
+        "content": "Find all users named John from the customers table, show name and email, limit 10"
+    }],
+    functions=[query_schema],
+    function_call={"name": "generate_sql_query"}
+)
+
+query_info = json.loads(response.choices[0].message.function_call.arguments)
+# Output: {
+#   "table": "customers",
+#   "columns": ["name", "email"],
+#   "conditions": [{"column": "name", "operator": "=", "value": "John"}],
+#   "limit": 10
+# }</code></pre>
+
+                <h3>LiteLLM Implementation Best Practices</h3>
+
+                <h4>Schema Definition Guidelines</h4>
+                <ul>
+                    <li><strong>Be Specific:</strong> Detailed descriptions help the model understand requirements</li>
+                    <li><strong>Use Appropriate Types:</strong> String, integer, boolean, array, object</li>
+                    <li><strong>Define Required Fields:</strong> Ensure critical data is always present</li>
+                    <li><strong>Provide Examples:</strong> Include example values in descriptions when helpful</li>
+                </ul>
+
+                <h4>Error Handling and Validation</h4>
+                <pre><code class="language-python">import json
+from typing import Dict, Any
+
+def safe_function_call(messages: list, schema: dict, model: str = "groq/mixtral-8x7b-32768") -> Dict[Any, Any]:
+    """Safely execute function call with error handling"""
+    try:
+        response = completion(
+            model=model,
+            messages=messages,
+            functions=[schema],
+            function_call={"name": schema["function"]["name"]}
+        )
+        
+        # Parse and validate the response
+        if response.choices[0].message.function_call:
+            result = json.loads(response.choices[0].message.function_call.arguments)
+            return {"success": True, "data": result}
+        else:
+            return {"success": False, "error": "No function call in response"}
+            
+    except json.JSONDecodeError as e:
+        return {"success": False, "error": f"Invalid JSON: {e}"}
+    except Exception as e:
+        return {"success": False, "error": f"API call failed: {e}"}</code></pre>
+            </section>
+
+            <!-- Section 5: Tool Calling Architecture -->
+            <section id="tool-calling-architecture" class="content-section">
+                <h2>5. Tool Calling Architecture</h2>
+
+                <div class="concept-section">
+                    <div class="concept-header">
+                        <span class="concept-icon">🔧</span>
+                        <h3 class="concept-title">From Function Calling to Tool Calling</h3>
+                    </div>
+                    
+                    <div class="visual-container">
+                        <img src="imgs/tool_calling_architecture.png" alt="Tool Calling Architecture Diagram">
+                        <div class="visual-caption">Complete tool calling system: LLM orchestrates external function execution</div>
+                    </div>
+
+                    <p><strong>Function Calling:</strong> LLM fills structured data formats (JSON schemas)</p>
+                    <p><strong>Tool Calling:</strong> LLM actually executes external functions and APIs</p>
+                    
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <h5>📝 Function Calling</h5>
+                            <ul>
+                                <li>Data extraction and structuring</li>
+                                <li>Schema validation</li>
+                                <li>No external execution</li>
+                                <li>Returns structured data</li>
+                            </ul>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🔧 Tool Calling</h5>
+                            <ul>
+                                <li>Actual function execution</li>
+                                <li>External API integration</li>
+                                <li>Real-world actions</li>
+                                <li>Returns execution results</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Tool Categories</h3>
+                <ul>
+                    <li><strong>Calculation Tools:</strong> Math operations, data processing</li>
+                    <li><strong>Database Tools:</strong> CRUD operations, queries</li>
+                    <li><strong>API Tools:</strong> External service integration</li>
+                    <li><strong>System Tools:</strong> File operations, system commands</li>
+                </ul>
+
+                <h3>Example Tool Implementation</h3>
+                <pre><code class="language-python">import math
+import sqlite3
+from typing import List, Dict, Any
+
+class CalculatorTools:
+    def add(self, a: float, b: float) -> float:
+        """Add two numbers"""
+        return a + b
+    
+    def calculate_area_circle(self, radius: float) -> float:
+        """Calculate the area of a circle"""
+        return math.pi * radius ** 2
+
+# Tool schemas for LiteLLM
+calculator_tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "add",
+            "description": "Add two numbers together",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "a": {"type": "number", "description": "First number"},
+                    "b": {"type": "number", "description": "Second number"}
+                },
+                "required": ["a", "b"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate_area_circle",
+            "description": "Calculate the area of a circle",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "radius": {"type": "number", "description": "Radius of the circle"}
+                },
+                "required": ["radius"]
+            }
+        }
+    }
+]</code></pre>
+            </section>
+
+            <!-- Section 6: Tool Calling Decision Process -->
+            <section id="tool-calling-decision" class="content-section">
+                <h2>6. Tool Calling Decision Process</h2>
+
+                <h3>Agentic AI: LLMs as Orchestrators</h3>
+                <p>Tool calling enables agentic AI systems where LLMs act as intelligent orchestrators:</p>
+
+                <h4>Decision-Making Process</h4>
+                <ul>
+                    <li><strong>Task Analysis:</strong> Understanding what the user wants to accomplish</li>
+                    <li><strong>Tool Selection:</strong> Choosing the right tools for the job</li>
+                    <li><strong>Sequential Execution:</strong> Chaining multiple tools together</li>
+                    <li><strong>Result Synthesis:</strong> Combining tool outputs into coherent responses</li>
+                </ul>
+
+                <div class="flow-diagram">
+                    <div class="diagram-box">Task Analysis</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Tool Selection</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Sequential Execution</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Result Synthesis</div>
+                </div>
+
+                <div class="principle-box">
+                    <div class="principle-title">🧠 Key Insight: LLM as Smart Controller</div>
+                    <p>The LLM doesn't just execute tools—it intelligently decides which tools to use, in what order, and how to combine their results to solve complex multi-step problems.</p>
+                </div>
+
+                <h4>Tool Chaining and Workflows</h4>
+                <p>Advanced agentic systems can chain multiple tools together:</p>
+                <pre><code class="language-python"># Example: Complex workflow combining multiple tools
+workflow_request = """
+I need to:
+1. Add 25 and 17
+2. Use that result as the radius to calculate circle area  
+3. If the area is greater than 1000, add a user named 'Large Circle User' 
+   with email '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="670b0615000227021f060a170b024904080a">[email&#160;protected]</a>' to the database
+"""
+
+result = executor.execute_with_tools(workflow_request)
+print(result)</code></pre>
+
+                <h3>Error Handling and Tool Response Processing</h3>
+                <ul>
+                    <li><strong>Validation:</strong> Check tool inputs before execution</li>
+                    <li><strong>Exception Handling:</strong> Gracefully handle tool failures</li>
+                    <li><strong>Timeout Management:</strong> Prevent tools from hanging indefinitely</li>
+                    <li><strong>Result Formatting:</strong> Present tool outputs in user-friendly format</li>
+                </ul>
+            </section>
+
+            <!-- Section 7: Tool Calling Implementation -->
+            <section id="tool-calling-implementation" class="content-section">
+                <h2>7. Tool Calling Implementation</h2>
+
+                <h4>Complete Tool Calling Implementation</h4>
+                <pre><code class="language-python">from litellm import completion
+import json
+from typing import List, Dict, Any
+
+class ToolExecutor:
+    def __init__(self):
+        self.tools = {}
+        self.tool_schemas = []
+    
+    def register_tool(self, name: str, func: callable, schema: dict):
+        """Register a tool with its execution function and schema"""
+        self.tools[name] = func
+        self.tool_schemas.append(schema)
+    
+    def execute_with_tools(self, user_message: str, model: str = "groq/mixtral-8x7b-32768") -> str:
+        """Execute user request with available tools"""
+        messages = [{"role": "user", "content": user_message}]
+        
+        while True:
+            # Get LLM response with tool options
+            response = completion(
+                model=model,
+                messages=messages,
+                functions=self.tool_schemas,
+                function_call="auto"
+            )
+            
+            message = response.choices[0].message
+            
+            # If no function call, return the text response
+            if not message.function_call:
+                return message.content
+            
+            # Execute the requested tool
+            tool_name = message.function_call.name
+            tool_args = json.loads(message.function_call.arguments)
+            
+            if tool_name in self.tools:
+                try:
+                    tool_result = self.tools[tool_name](**tool_args)
+                    
+                    # Add tool call and result to conversation
+                    messages.append({
+                        "role": "assistant",
+                        "content": None,
+                        "function_call": {
+                            "name": tool_name,
+                            "arguments": message.function_call.arguments
+                        }
+                    })
+                    messages.append({
+                        "role": "function",
+                        "name": tool_name,
+                        "content": str(tool_result)
+                    })
+                    
+                except Exception as e:
+                    # Handle tool execution errors
+                    messages.append({
+                        "role": "function", 
+                        "name": tool_name,
+                        "content": f"Error: {e}"
+                    })
+            else:
+                return f"Tool {tool_name} not available"
+
+# Usage example
+executor = ToolExecutor()
+
+# Register calculator tools
+calc = CalculatorTools()
+executor.register_tool("add", calc.add, calculator_tools[0])
+executor.register_tool("calculate_area_circle", calc.calculate_area_circle, calculator_tools[1])
+
+# Execute user requests
+result1 = executor.execute_with_tools("What's 15 plus 27?")
+result2 = executor.execute_with_tools("Calculate the area of a circle with radius 5")
+
+print(result1)  # The result is 42
+print(result2)  # The area is approximately 78.54 square units</code></pre>
+            </section>
+
+            <!-- Section 8: Summary & Next Steps -->
+            <section id="summary" class="content-section">
+                <h2>8. Summary & Next Steps</h2>
+
+                <h3>What We've Covered Today</h3>
+                <p>In this session, we explored three crucial concepts for building intelligent applications:</p>
+                
+                <ul>
+                    <li><strong>Structured Outputs:</strong> Converting natural language into predictable, machine-readable JSON formats</li>
+                    <li><strong>Function Calling:</strong> Using JSON schemas to extract and validate data from user inputs</li>
+                    <li><strong>Tool Calling:</strong> Enabling LLMs to trigger external functions and APIs for dynamic capabilities</li>
+                    <li><strong>Agentic AI:</strong> Understanding how LLMs can orchestrate complex workflows through tool integration</li>
+                </ul>
+
+                <div class="concept-section">
+                    <div class="concept-header">
+                        <span class="concept-icon">🎯</span>
+                        <h3 class="concept-title">Key Takeaways</h3>
+                    </div>
+                    
+                    <div class="principle-box">
+                        <div class="principle-title">💡 Architecture Pattern: "Schema → Function → Tool → Agent"</div>
+                        <p>Start with structured schemas, build function calling capabilities, extend to tool calling, and eventually create full agentic systems that can orchestrate multiple tools to accomplish complex tasks.</p>
+                    </div>
+
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <h5>🔧 Technical Skills Developed</h5>
+                            <ul>
+                                <li>JSON schema design and validation</li>
+                                <li>LiteLLM function calling implementation</li>
+                                <li>Tool registration and execution patterns</li>
+                                <li>Error handling and timeout management</li>
+                                <li>Conversation state management</li>
+                            </ul>
+                        </div>
+                        <div class="comparison-item">
+                            <h5>🚀 Practical Applications</h5>
+                            <ul>
+                                <li>Data extraction from natural language</li>
+                                <li>Automated form filling and validation</li>
+                                <li>Calculator and computation agents</li>
+                                <li>API integration and external service calls</li>
+                                <li>Multi-step workflow orchestration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Lab Session Focus</h3>
+                <p>In today's 2-hour lab, you will:</p>
+                <ul>
+                    <li><strong>Build a function calling system</strong> for extracting user data from natural language</li>
+                    <li><strong>Create tool calling agents</strong> that can execute calculations and database operations</li>
+                    <li><strong>Implement advanced tool orchestration</strong> with multiple integrated services</li>
+                    <li><strong>Design agentic workflows</strong> that combine multiple tools for complex problem-solving</li>
+                    <li><strong>Create error handling and fallback strategies</strong> for robust production systems</li>
+                </ul>
+
+                <div class="principle-box">
+                    <div class="principle-title">🚀 Next Week: Advanced Agentic AI</div>
+                    <p>We'll explore multi-agent systems, advanced reasoning patterns, memory management, and deployment strategies for production LLM applications with complex tool ecosystems.</p>
+                </div>
+
+                <h4>Advanced Tool Calling Techniques (Future Topics)</h4>
+                <ul>
+                    <li><strong>Multi-Agent Coordination:</strong> Orchestrating multiple specialized agents</li>
+                    <li><strong>Dynamic Tool Discovery:</strong> Runtime tool registration and capability detection</li>
+                    <li><strong>Chain-of-Thought Tools:</strong> Tools that enhance reasoning capabilities</li>
+                    <li><strong>Memory and Context Management:</strong> Persistent state across complex workflows</li>
+                    <li><strong>Production Deployment:</strong> Scaling agentic systems with proper monitoring</li>
+                </ul>
+
+                <h3>Best Practices Learned</h3>
+                <div class="analogy-box">
+                    <div class="analogy-title">🌟 Production Readiness Checklist</div>
+                    <ul>
+                        <li><strong>Schema Validation:</strong> Always validate inputs and outputs</li>
+                        <li><strong>Error Handling:</strong> Graceful degradation when tools fail</li>
+                        <li><strong>Timeout Management:</strong> Prevent hanging operations</li>
+                        <li><strong>Result Formatting:</strong> User-friendly output presentation</li>
+                        <li><strong>Security Considerations:</strong> Validate tool parameters and limit access</li>
+                        <li><strong>Performance Optimization:</strong> Cache results and minimize API calls</li>
+                    </ul>
+                </div>
+
+                <h3>Understanding Tool Calling vs Function Calling</h3>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <h5>📋 Function Calling</h5>
+                        <ul>
+                            <li><strong>Purpose:</strong> Data extraction and validation</li>
+                            <li><strong>Output:</strong> Structured JSON responses</li>
+                            <li><strong>Use Case:</strong> Form filling, data parsing</li>
+                            <li><strong>Execution:</strong> No external code execution</li>
+                            <li><strong>Complexity:</strong> Simple, deterministic</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>🔧 Tool Calling</h5>
+                        <ul>
+                            <li><strong>Purpose:</strong> Dynamic capability extension</li>
+                            <li><strong>Output:</strong> Execution results and side effects</li>
+                            <li><strong>Use Case:</strong> Calculations, API calls, file operations</li>
+                            <li><strong>Execution:</strong> Active code execution</li>
+                            <li><strong>Complexity:</strong> Complex, contextual</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Implementation Progression</h3>
+                <div class="flow-diagram">
+                    <div class="diagram-box">JSON Schema</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Function Calling</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Tool Registration</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Tool Calling</div>
+                    <span class="diagram-arrow">→</span>
+                    <div class="diagram-box">Agentic System</div>
+                </div>
+
+                <p>This progression represents the learning path from basic structured outputs to sophisticated agentic AI systems capable of complex reasoning and task execution.</p>
+            </section>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop" title="Scroll to Top">↑</button>
+
+    <!-- JavaScript -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Navigation functionality
+        const navToggle = document.getElementById('navToggle');
+        const navSidebar = document.getElementById('navSidebar');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+
+        // Mobile navigation toggle
+        navToggle.addEventListener('click', () => {
+            navSidebar.classList.toggle('open');
+        });
+
+        // Close nav when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && 
+                !navSidebar.contains(e.target) && 
+                !navToggle.contains(e.target) && 
+                navSidebar.classList.contains('open')) {
+                navSidebar.classList.remove('open');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                if (targetSection) {
+                    targetSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Close mobile nav after clicking
+                    if (window.innerWidth <= 768) {
+                        navSidebar.classList.remove('open');
+                    }
+                }
+            });
+        });
+
+        // Active section highlighting
+        function updateActiveSection() {
+            const sections = document.querySelectorAll('.content-section, .learning-objectives');
+            const scrollPosition = window.scrollY + 200; // Offset for better UX
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    // Remove active class from all links
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    
+                    // Add active class to corresponding link
+                    const activeLink = document.querySelector(`a[href="#${sectionId}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Scroll to top functionality
+        function toggleScrollToTop() {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        }
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Event listeners
+        window.addEventListener('scroll', () => {
+            updateActiveSection();
+            toggleScrollToTop();
+        });
+
+        // Initial calls
+        updateActiveSection();
+        toggleScrollToTop();
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                navSidebar.classList.remove('open');
+            }
+        });
+    </script>
+
+    <!-- Syntax Highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+<style>
+#minimax-floating-ball {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 12px;
+  background: #222222;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  color: #F8F8F8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  z-index: 9999;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#minimax-floating-ball:hover {
+  transform: translateY(-2px);
+  background: #383838;
+}
+.minimax-ball-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.minimax-logo-wave {
+  width: 26px;
+  height: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='22' viewBox='0 0 26 22' fill='none'%3E%3Cg clip-path='url(%23clip0_3442_102412)'%3E%3Cpath d='M12.8405 14.6775C12.8405 14.9897 13.0932 15.2424 13.4055 15.2424C13.7178 15.2424 13.9705 14.9897 13.9705 14.6775V2.98254C13.9705 1.88957 13.0809 1 11.9879 1C10.895 1 10.0054 1.88957 10.0054 2.98254V11.566V17.1068C10.0054 17.5773 9.62327 17.9594 9.1528 17.9594C8.68233 17.9594 8.30021 17.5773 8.30021 17.1068V8.04469C8.30021 6.95172 7.41063 6.06215 6.31767 6.06215C5.22471 6.06215 4.33513 6.95172 4.33513 8.04469V11.8855C4.33513 12.3559 3.953 12.7381 3.48254 12.7381C3.01207 12.7381 2.62994 12.3559 2.62994 11.8855V10.4936C2.62994 10.1813 2.37725 9.92861 2.06497 9.92861C1.7527 9.92861 1.5 10.1813 1.5 10.4936V11.8855C1.5 12.9784 2.38957 13.868 3.48254 13.868C4.5755 13.868 5.46508 12.9784 5.46508 11.8855V8.04469C5.46508 7.57422 5.8472 7.19209 6.31767 7.19209C6.78814 7.19209 7.17026 7.57422 7.17026 8.04469V17.1068C7.17026 18.1998 8.05984 19.0894 9.1528 19.0894C10.2458 19.0894 11.1353 18.1998 11.1353 17.1068V2.98254C11.1353 2.51207 11.5175 2.12994 11.9879 2.12994C12.4584 2.12994 12.8405 2.51207 12.8405 2.98254V14.6775Z' fill='%23F8F8F8'/%3E%3Cpath d='M23.3278 6.06215C22.2348 6.06215 21.3452 6.95172 21.3452 8.04469V15.6143C21.3452 16.0847 20.9631 16.4669 20.4926 16.4669C20.0222 16.4669 19.6401 16.0847 19.6401 15.6143V2.98254C19.6401 1.88957 18.7505 1 17.6575 1C16.5645 1 15.675 1.88957 15.675 2.98254V19.0175C15.675 19.4879 15.2928 19.8701 14.8224 19.8701C14.3519 19.8701 13.9698 19.4879 13.9698 19.0175V17.0329C13.9698 16.7206 13.7171 16.4679 13.4048 16.4679C13.0925 16.4679 12.8398 16.7206 12.8398 17.0329V19.0175C12.8398 20.1104 13.7294 21 14.8224 21C15.9153 21 16.8049 20.1104 16.8049 19.0175V2.98254C16.8049 2.51207 17.187 2.12994 17.6575 2.12994C18.128 2.12994 18.5101 2.51207 18.5101 2.98254V15.6143C18.5101 16.7072 19.3997 17.5968 20.4926 17.5968C21.5856 17.5968 22.4752 16.7072 22.4752 15.6143V8.04469C22.4752 7.57422 22.8573 7.19209 23.3278 7.19209C23.7982 7.19209 24.1804 7.57422 24.1804 8.04469V14.6775C24.1804 14.9897 24.4331 15.2424 24.7453 15.2424C25.0576 15.2424 25.3103 14.9897 25.3103 14.6775V8.04469C25.3103 6.95172 24.4207 6.06215 23.3278 6.06215Z' fill='%23F8F8F8'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_3442_102412'%3E%3Crect width='25' height='22' fill='white' transform='translate(0.5)'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.minimax-ball-text {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.minimax-close-icon {
+  margin-left: 8px;
+  font-size: 16px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.minimax-close-icon:hover {
+  opacity: 1;
+}
+</style>
+<div id="minimax-floating-ball">
+  <div class="minimax-ball-content">
+    <div class="minimax-logo-wave"></div>
+    <span class="minimax-ball-text">Created by MiniMax Agent</span>
+  </div>
+  <div class="minimax-close-icon">×</div>
+</div>
+<script>
+// Initialize floating ball functionality
+function initFloatingBall() {
+  const ball = document.getElementById('minimax-floating-ball');
+  if (!ball) return;
+
+  // Initial animation
+  ball.style.opacity = '0';
+  ball.style.transform = 'translateY(20px)';
+
+  setTimeout(() => {
+    ball.style.opacity = '1';
+    ball.style.transform = 'translateY(0)';
+  }, 500);
+
+  // Handle logo click
+  const ballContent = ball.querySelector('.minimax-ball-content');
+  ballContent.addEventListener('click', function (e) {
+    e.stopPropagation();
+    window.open('https://agent.minimax.io/agent', '_blank');
+    ball.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      ball.style.transform = 'scale(1)';
+    }, 100);
+  });
+
+  // Handle close button click
+  const closeIcon = ball.querySelector('.minimax-close-icon');
+  closeIcon.addEventListener('click', function (e) {
+    e.stopPropagation();
+    ball.style.opacity = '0';
+    ball.style.transform = 'translateY(20px)';
+
+    setTimeout(() => {
+      ball.style.display = 'none';
+    }, 300);
+  });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initFloatingBall); 
+</script>
+</body>
+</html>
