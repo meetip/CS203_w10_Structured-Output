@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS203 Week 10: Structured Outputs, Function Calling & Tool Calling</title>
+    <title>CS203 Week 10: Structured Outputs, JSON Mode & Tool Calling</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet">
     <style>
@@ -19,12 +19,12 @@
             --color-code-text: #343A40;
             --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --font-family-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
-            --container-max-width: 100;
+            --container-max-width: 960px;
             --nav-width: 280px;
             --spacing-unit: 1rem;
             --border-radius: 8px;
         }
-
+ 
         /* Reset and Base Styles */
         * {
             margin: 0;
@@ -636,10 +636,10 @@
                 <a href="#understanding-problem" class="nav-link">Understanding the Problem</a>
             </li>
             <li class="nav-item">
-                <a href="#function-calling-concept" class="nav-link">Function Calling Concept</a>
+                <a href="#function-calling-concept" class="nav-link">JSON Mode Concept</a>
             </li>
             <li class="nav-item">
-                <a href="#function-calling-implementation" class="nav-link">Function Calling Implementation</a>
+                <a href="#function-calling-implementation" class="nav-link">JSON Mode Implementation</a>
             </li>
             <li class="nav-item">
                 <a href="#tool-calling-architecture" class="nav-link">Tool Calling Architecture</a>
@@ -662,7 +662,7 @@
         <div class="container">
             <!-- Page Header -->
             <header class="page-header">
-                <h1>CS203 Week 10: Structured Outputs, Function Calling & Tool Calling</h1>
+                <h1>CS203 Week 10: Structured Outputs, JSON Mode & Tool Calling</h1>
                 <div class="course-info">
                     <strong>Course:</strong> CS203 Computer Science Technology<br>
                     <strong>Duration:</strong> 1.5 hours lecture | 2 hours lab<br>
@@ -676,8 +676,8 @@
                 <p><strong>By the end of this session, students will be able to:</strong></p>
                 <ol>
                     <li>Explain why structured output is needed in applications</li>
-                    <li>Implement function calling with JSON schema using LiteLLM</li>
-                    <li>Extend function calling to tool calling (LLM triggers external functions)</li>
+                    <li>Implement structured outputs using LiteLLM's JSON mode</li>
+                    <li>Extend JSON mode to tool calling (LLM triggers external functions)</li>
                     <li>Understand agentic AI concepts and LLM orchestration</li>
                 </ol>
             </section>
@@ -819,14 +819,14 @@ response = completion(
     model="groq/mixtral-8x7b-32768",
     messages=[{
         "role": "user", 
-        "content": "Extract user info: John Doe, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6903060107290c04080005470a0604">[email&#160;protected]</a>, likes laptops"
+        "content": "Extract user info: John Doe, john@email.com, likes laptops"
     }]
 )
 
 # Response might be:
-# "The user's name is John Doe, email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3852575056785d55595154165b5755">[email&#160;protected]</a>, interested in laptops"
-# OR "Name: John Doe\nEmail: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cba1a4a3a58baea6aaa2a7e5a8a4a6">[email&#160;protected]</a>\nPreferences: laptops"
-# OR "John Doe (<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="abc1c4c3c5ebcec6cac2c785c8c4c6">[email&#160;protected]</a>) - laptops"
+# "The user's name is John Doe, email john@email.com, interested in laptops"
+# OR "Name: John Doe\nEmail: john@email.com\nPreferences: laptops"
+# OR "John Doe (john@email.com) - laptops"
 
 # How do we reliably parse this?</code></pre>
             </section>
@@ -842,7 +842,7 @@ response = completion(
                     </div>
                     
                     <div class="visual-container">
-                        <img src="imgs/function_calling_flow.png" alt="Function Calling Concept Flow">
+                        <img src="imgs/function_calling_flow.png" alt="JSON Mode Concept Flow">
                         <div class="visual-caption">The conceptual flow: How LLMs understand and map natural language to structured schemas</div>
                     </div>
 
@@ -866,8 +866,8 @@ response = completion(
                     </ol>
                 </div>
 
-                <h3>Solution: Function Calling with JSON Schema</h3>
-                <p>Function calling allows LLMs to fill structured data formats by defining precise schemas:</p>
+                <h3>Solution: JSON Mode with Structured Outputs</h3>
+                <p>JSON mode allows LLMs to return structured data formats by defining precise schemas:</p>
 
                 <div class="flow-diagram">
                     <div class="diagram-box">User Input</div>
@@ -879,7 +879,7 @@ response = completion(
                     <div class="diagram-box">Structured JSON</div>
                 </div>
 
-                <h4>Function Calling Concepts</h4>
+                <h4>JSON Mode Concepts</h4>
                 <ul>
                     <li><strong>Schema Definition:</strong> Define the exact structure of expected output</li>
                     <li><strong>Type Validation:</strong> Ensure data types match requirements</li>
@@ -888,130 +888,176 @@ response = completion(
                 </ul>
             </section>
 
-            <!-- Section 4: Function Calling Implementation -->
+            <!-- Section 4: JSON Mode Implementation -->
             <section id="function-calling-implementation" class="content-section">
-                <h2>4. Function Calling Implementation</h2>
+                <h2>4. JSON Mode Implementation</h2>
+                <h3>Getting Started with LiteLLM's JSON Mode</h3>
+                <p>LiteLLM provides built-in support for JSON mode, making it easy to implement structured outputs in your applications.</p>    
+                <h4>Basic Example: Simple JSON Object</h4>
+                <pre><code class="language-python">from litellm import completion
+import json
+
+messages = [
+    {"role": "system", "content": "You ONLY reply with a single JSON object."},
+    {"role": "user", "content": "Extract: Sarah Johnson, 28, 
+    [email protected]; likes smartphones and tablets."}
+]
+
+
+resp = completion(
+    model="llama-3.3-70b-versatile",
+    messages=messages,
+    response_format={"type": "json_object"}, # JSON Mode
+    max_tokens=200,
+)
+content = resp.choices[0].message["content"]
+print("RAW JSON string:", content)
+print("Parsed dict:", json.dumps(json.loads(content), indent=2))
+
+#Expected Output:
+#RAW JSON string: {
+#   "name": "Sarah Johnson",
+#   "age": 28,
+#   "email": "[email protected]",
+#   "interests": ["smartphones", "tablets"]
+#}
+#Parsed dict: {
+#  "name": "Sarah Johnson",
+#  "age": 28,
+#  "email": "[email\u00a0protected]",
+#  "interests": [
+#    "smartphones",
+#    "tablets"
+#  ]
+#}
+                </code></pre>
+
 
                 <h3>Practical Examples with Code</h3>
 
                 <h4>Example 1: User Information Extraction</h4>
                 <pre><code class="language-python">from litellm import completion
+from config import MODEL
 import json
 
-# Define the function schema
-user_info_schema = {
-    "type": "function",
-    "function": {
-        "name": "extract_user_info",
-        "description": "Extract structured user information",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Full name of the user"
-                },
-                "email": {
-                    "type": "string",
-                    "description": "Email address"
-                },
-                "preferences": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of product preferences"
-                },
-                "age": {
-                    "type": "integer",
-                    "description": "Age in years, if mentioned"
-                }
-            },
-            "required": ["name", "email"]
-        }
-    }
+
+schema = {
+    "name": "UserInfo",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "email": {"type": "string"},
+            "age": {"type": "integer"},
+            "preferences": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["name", "email"],
+        "additionalProperties": False
+    },
+    "strict": True
 }
 
-# Make the function call
+
+messages = [
+    {"role": "system", "content": "Return ONLY a JSON object matching the schema."},
+    {"role": "user",
+        "content": "Extract: Sarah Johnson, 28, [email protected]; likes smartphones and tablets."}
+]
+
+
 response = completion(
-    model="groq/mixtral-8x7b-32768",
-    messages=[{
-        "role": "user",
-        "content": "Extract info: Sarah Johnson, 28, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f2819380939adc98b2919d9f82939c8bdc919d9f">[email&#160;protected]</a>, loves smartphones and tablets"
-    }],
-    functions=[user_info_schema],
-    function_call={"name": "extract_user_info"}
-)
+    model=MODEL,
+    messages=messages,
+    response_format={"type": "json_schema", "json_schema": schema},
+) 
+
 
 # Get structured result
-function_args = json.loads(response.choices[0].message.function_call.arguments)
-print(function_args)
+structured_data = json.loads(response.choices[0].message.content)
+print(structured_data)
 # Output: {
 #   "name": "Sarah Johnson",
-#   "email": "<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1d6e7c6f7c7533775d7e72706d7c7364337e7270">[email&#160;protected]</a>", 
+#   "email": "sarah.j@company.com", 
 #   "preferences": ["smartphones", "tablets"],
 #   "age": 28
 # }</code></pre>
 
                 <h4>Example 2: Database Query Generation</h4>
-                <pre><code class="language-python"># Schema for generating database queries
+                <pre><code class="language-python"># # Part A — Example 2: SQL query schema with intermediate display + JSON parsing
+from litellm import completion
+import json
+from config import MODEL
+
 query_schema = {
-    "type": "function",
-    "function": {
-        "name": "generate_sql_query",
-        "description": "Generate SQL query from natural language",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "table": {
-                    "type": "string",
-                    "description": "Primary table to query"
-                },
-                "columns": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Columns to select"
-                },
-                "conditions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "column": {"type": "string"},
-                            "operator": {"type": "string"},
-                            "value": {"type": "string"}
-                        }
-                    }
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Maximum number of results"
+    "name": "generate_sql_query",
+    "description": "Generate a simple SQL SELECT",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "table": {"type": "string"},
+            "columns": {"type": "array", "items": {"type": "string"}},
+            "conditions": {"type": "array", "items": {
+                "type": "object",
+                "properties": {
+                    "column": {"type": "string"},
+                    "operator": {"type": "string"},
+                    "value": {"type": "string"}
                 }
-            },
-            "required": ["table", "columns"]
-        }
+            }},
+            "limit": {"type": "integer"}
+        },
+        "required": ["table", "columns"]
     }
 }
 
-response = completion(
-    model="groq/mixtral-8x7b-32768",
-    messages=[{
-        "role": "user",
-        "content": "Find all users named John from the customers table, show name and email, limit 10"
-    }],
-    functions=[query_schema],
-    function_call={"name": "generate_sql_query"}
-)
+prompt = "Find name and email from customers where name = John; max 10 rows."
+first = completion(model=MODEL, messages=[{"role": "user", "content": prompt}],
+                   functions=[query_schema], function_call={"name": "generate_sql_query"})
+msg = first.choices[0].message
 
-query_info = json.loads(response.choices[0].message.function_call.arguments)
-# Output: {
+# Intermediate: raw function_call arguments
+fc = getattr(msg, "function_call", None) if hasattr(msg, "function_call") else msg.get("function_call")
+raw = getattr(fc, "arguments", None) if fc else None
+print("=== INTERMEDIATE (SQL) raw arguments ===")
+print(raw)
+
+# Parse + pretty print
+try:
+    args = json.loads(raw or "{}")
+    print("\nParsed:")
+    print(json.dumps(args, indent=2))
+except Exception as e:
+    print("JSON error:", e)
+
+# (Optional) Build a fake SQL from parsed args (for visualization only)
+if raw:
+    table = args.get("table", "table")
+    cols = ", ".join(args.get("columns", ["*"]))
+    conds = args.get("conditions", [])
+    where = ""
+    if conds:
+        parts = [f"{c.get('column')} {c.get('operator')} '{c.get('value')}'" for c in conds]
+        where = " WHERE " + " AND ".join(parts)
+    limit = args.get("limit")
+    limit_sql = f" LIMIT {limit}" if limit else ""
+    sql_preview = f"SELECT {cols} FROM {table}{where}{limit_sql};"
+    print("\nSQL preview:", sql_preview)
+# Expected Output:
+# === INTERMEDIATE (SQL) raw arguments ===
+# {#   "table": "customers",
+#   "columns": ["name", "email"],
+#   "conditions": [{"column": "name", "operator": "=", "value": "John"}],
+#   "limit": 10     
+# }
+# Parsed:
+# {
 #   "table": "customers",
 #   "columns": ["name", "email"],
 #   "conditions": [{"column": "name", "operator": "=", "value": "John"}],
 #   "limit": 10
-# }</code></pre>
+# } 
+# SQL preview: SELECT name, email FROM customers WHERE name = 'John' LIMIT 10;</code></pre>
 
-                <h3>LiteLLM Implementation Best Practices</h3>
-
-                <h4>Schema Definition Guidelines</h4>
                 <ul>
                     <li><strong>Be Specific:</strong> Detailed descriptions help the model understand requirements</li>
                     <li><strong>Use Appropriate Types:</strong> String, integer, boolean, array, object</li>
@@ -1023,22 +1069,24 @@ query_info = json.loads(response.choices[0].message.function_call.arguments)
                 <pre><code class="language-python">import json
 from typing import Dict, Any
 
-def safe_function_call(messages: list, schema: dict, model: str = "groq/mixtral-8x7b-32768") -> Dict[Any, Any]:
-    """Safely execute function call with error handling"""
+def safe_json_mode_call(messages: list, schema: dict, model: str = "groq/mixtral-8x7b-32768") -> Dict[Any, Any]:
+    """Safely execute JSON mode call with error handling"""
     try:
         response = completion(
             model=model,
             messages=messages,
-            functions=[schema],
-            function_call={"name": schema["function"]["name"]}
+            response_format={
+                "type": "json_schema",
+                "json_schema": schema
+            }
         )
         
         # Parse and validate the response
-        if response.choices[0].message.function_call:
-            result = json.loads(response.choices[0].message.function_call.arguments)
+        if response.choices[0].message.content:
+            result = json.loads(response.choices[0].message.content)
             return {"success": True, "data": result}
         else:
-            return {"success": False, "error": "No function call in response"}
+            return {"success": False, "error": "No content in response"}
             
     except json.JSONDecodeError as e:
         return {"success": False, "error": f"Invalid JSON: {e}"}
@@ -1053,7 +1101,7 @@ def safe_function_call(messages: list, schema: dict, model: str = "groq/mixtral-
                 <div class="concept-section">
                     <div class="concept-header">
                         <span class="concept-icon">🔧</span>
-                        <h3 class="concept-title">From Function Calling to Tool Calling</h3>
+                        <h3 class="concept-title">From JSON Mode to Tool Calling</h3>
                     </div>
                     
                     <div class="visual-container">
@@ -1061,12 +1109,12 @@ def safe_function_call(messages: list, schema: dict, model: str = "groq/mixtral-
                         <div class="visual-caption">Complete tool calling system: LLM orchestrates external function execution</div>
                     </div>
 
-                    <p><strong>Function Calling:</strong> LLM fills structured data formats (JSON schemas)</p>
+                    <p><strong>JSON Mode:</strong> LLM returns structured data formats (JSON schemas)</p>
                     <p><strong>Tool Calling:</strong> LLM actually executes external functions and APIs</p>
                     
                     <div class="comparison-grid">
                         <div class="comparison-item">
-                            <h5>📝 Function Calling</h5>
+                            <h5>📝 JSON Mode</h5>
                             <ul>
                                 <li>Data extraction and structuring</li>
                                 <li>Schema validation</li>
@@ -1095,51 +1143,62 @@ def safe_function_call(messages: list, schema: dict, model: str = "groq/mixtral-
                 </ul>
 
                 <h3>Example Tool Implementation</h3>
-                <pre><code class="language-python">import math
-import sqlite3
-from typing import List, Dict, Any
+                <pre><code class="language-python"># Part B — Example 2: Weather tool (simulated) with intermediate view
+import json
+from litellm import completion
+from config import MODEL
+#tools implementation
+def get_weather(city: str, unit: str = "celsius"):
+    temp_c = 28  # pretend API
+    return {"city": city, "unit": unit, "temperature": temp_c if unit == "celsius" else round(temp_c * 9/5 + 32)}
 
-class CalculatorTools:
-    def add(self, a: float, b: float) -> float:
-        """Add two numbers"""
-        return a + b
-    
-    def calculate_area_circle(self, radius: float) -> float:
-        """Calculate the area of a circle"""
-        return math.pi * radius ** 2
-
-# Tool schemas for LiteLLM
-calculator_tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "add",
-            "description": "Add two numbers together",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "a": {"type": "number", "description": "First number"},
-                    "b": {"type": "number", "description": "Second number"}
-                },
-                "required": ["a", "b"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calculate_area_circle",
-            "description": "Calculate the area of a circle",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "radius": {"type": "number", "description": "Radius of the circle"}
-                },
-                "required": ["radius"]
-            }
-        }
+#tools schema
+weather_tool = [{
+    "name": "get_weather",
+    "description": "Get current weather (simulated)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "city": {"type": "string"},
+            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "default": "celsius"}
+        },
+        "required": ["city"]
     }
-]</code></pre>
+}]
+
+messages = [{"role": "user", "content": "What’s the weather in Chiang Mai in fahrenheit?"}]
+first = completion(
+    model=MODEL, 
+    messages=messages, 
+    functions=weather_tool, 
+    function_call="auto")
+msg = first.choices[0].message
+fc = getattr(msg, "function_call", None) 
+if hasattr(msg, "function_call") else msg.get("function_call")
+print("=== INTERMEDIATE (weather) ===")
+print("function name:", getattr(fc, "name", None) if fc else None)
+print("arguments:", getattr(fc, "arguments", None) if fc else None)
+
+if fc:
+    args = json.loads(fc.arguments or "{}")
+    tool_result = get_weather(**args)
+    messages.append({
+        "role": "assistant", "content": None, 
+        "function_call": {"name": fc.name, "arguments": fc.arguments}})
+    messages.append({
+        "role": "function", 
+        "name": "get_weather", 
+        "content": json.dumps(tool_result)})
+    final = completion(model=MODEL, messages=messages)
+    print("\nFINAL:", final.choices[0].message["content"])
+else:
+    print("No tool call proposed.")
+# Expected Output:
+# === INTERMEDIATE (weather) ===
+# functionname: get_weather
+# arguments: {" city": "Chiang Mai", "unit": "fahrenheit" }
+# FINAL: The current temperature in Chiang Mai is approximately 82.4°F (28°C).</code></pre>
+           
             </section>
 
             <!-- Section 6: Tool Calling Decision Process -->
@@ -1180,7 +1239,7 @@ I need to:
 1. Add 25 and 17
 2. Use that result as the radius to calculate circle area  
 3. If the area is greater than 1000, add a user named 'Large Circle User' 
-   with email '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="670b0615000227021f060a170b024904080a">[email&#160;protected]</a>' to the database
+   with email 'large@example.com' to the database
 """
 
 result = executor.execute_with_tools(workflow_request)
@@ -1200,26 +1259,82 @@ print(result)</code></pre>
                 <h2>7. Tool Calling Implementation</h2>
 
                 <h4>Complete Tool Calling Implementation</h4>
-                <pre><code class="language-python">from litellm import completion
+                <pre><code class="language-python"># Imports and dependencies
+from litellm import completion
 import json
+import math
 from typing import List, Dict, Any
+from config import MODEL
+
+
+# Tool implementations - Calculator functions with schema definitions
+class CalculatorTools:
+    def add(self, a: float, b: float) -> float:
+        return float(a) + float(b)
+    
+    def area_circle(self, radius: float) -> float:
+        return math.pi * float(radius) ** 2
+    
+    @classmethod
+    def get_schemas(cls):
+        """Return the function schemas for all tools in this class"""
+        return [
+            {
+                "name": "add",
+                "description": "Add two numbers",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"type": "number"},
+                        "b": {"type": "number"}
+                    },
+                    "required": ["a", "b"]
+                }
+            },
+            {
+                "name": "area_circle",
+                "description": "Area of a circle",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "radius": {"type": "number"}
+                    },
+                    "required": ["radius"]
+                }
+            }
+        ]
+    
+    def register_all_tools(self, executor):
+        """Register all tools in this class with the executor"""
+        schemas = self.get_schemas()
+        executor.register_tool("add", self.add, schemas[0])
+        executor.register_tool("area_circle", self.area_circle, schemas[1])
 
 class ToolExecutor:
+    """Main executor class that manages tools and handles LLM function calling"""
     def __init__(self):
         self.tools = {}
         self.tool_schemas = []
     
     def register_tool(self, name: str, func: callable, schema: dict):
-        """Register a tool with its execution function and schema"""
+        """Register a single tool with its execution function and schema"""
         self.tools[name] = func
         self.tool_schemas.append(schema)
     
-    def execute_with_tools(self, user_message: str, model: str = "groq/mixtral-8x7b-32768") -> str:
-        """Execute user request with available tools"""
+    def register_tools(self, tool_class_instance):
+        """Register all tools from a tool class instance"""
+        schemas = tool_class_instance.get_schemas()
+        for i, schema in enumerate(schemas):
+            tool_name = schema["name"]
+            tool_func = getattr(tool_class_instance, tool_name)
+            self.register_tool(tool_name, tool_func, schema)
+    
+    def execute_with_tools(self, user_message: str, model: str = MODEL) -> str:
+        """Execute user request with available tools - main conversation loop"""
         messages = [{"role": "user", "content": user_message}]
         
         while True:
-            # Get LLM response with tool options
+            # Step 1: Get LLM response with tool options
             response = completion(
                 model=model,
                 messages=messages,
@@ -1229,11 +1344,11 @@ class ToolExecutor:
             
             message = response.choices[0].message
             
-            # If no function call, return the text response
+            # Step 2: Check if LLM wants to call a function
             if not message.function_call:
                 return message.content
             
-            # Execute the requested tool
+            # Step 3: Execute the requested tool
             tool_name = message.function_call.name
             tool_args = json.loads(message.function_call.arguments)
             
@@ -1241,7 +1356,7 @@ class ToolExecutor:
                 try:
                     tool_result = self.tools[tool_name](**tool_args)
                     
-                    # Add tool call and result to conversation
+                    # Step 4: Add tool call and result to conversation history
                     messages.append({
                         "role": "assistant",
                         "content": None,
@@ -1266,18 +1381,17 @@ class ToolExecutor:
             else:
                 return f"Tool {tool_name} not available"
 
-# Usage example
+# Demo usage and testing
 executor = ToolExecutor()
 
-# Register calculator tools
+# Register calculator tools using the new register_tools method
 calc = CalculatorTools()
-executor.register_tool("add", calc.add, calculator_tools[0])
-executor.register_tool("calculate_area_circle", calc.calculate_area_circle, calculator_tools[1])
+executor.register_tools(calc)
 
-# Execute user requests
+# Execute user requests and display results
 result1 = executor.execute_with_tools("What's 15 plus 27?")
 result2 = executor.execute_with_tools("Calculate the area of a circle with radius 5")
-
+ 
 print(result1)  # The result is 42
 print(result2)  # The area is approximately 78.54 square units</code></pre>
             </section>
@@ -1291,7 +1405,7 @@ print(result2)  # The area is approximately 78.54 square units</code></pre>
                 
                 <ul>
                     <li><strong>Structured Outputs:</strong> Converting natural language into predictable, machine-readable JSON formats</li>
-                    <li><strong>Function Calling:</strong> Using JSON schemas to extract and validate data from user inputs</li>
+                    <li><strong>JSON Mode:</strong> Using JSON schemas to extract and validate data from user inputs</li>
                     <li><strong>Tool Calling:</strong> Enabling LLMs to trigger external functions and APIs for dynamic capabilities</li>
                     <li><strong>Agentic AI:</strong> Understanding how LLMs can orchestrate complex workflows through tool integration</li>
                 </ul>
@@ -1303,8 +1417,8 @@ print(result2)  # The area is approximately 78.54 square units</code></pre>
                     </div>
                     
                     <div class="principle-box">
-                        <div class="principle-title">💡 Architecture Pattern: "Schema → Function → Tool → Agent"</div>
-                        <p>Start with structured schemas, build function calling capabilities, extend to tool calling, and eventually create full agentic systems that can orchestrate multiple tools to accomplish complex tasks.</p>
+                        <div class="principle-title">💡 Architecture Pattern: "Schema → JSON Mode → Tool → Agent"</div>
+                        <p>Start with structured schemas, build JSON mode capabilities, extend to tool calling, and eventually create full agentic systems that can orchestrate multiple tools to accomplish complex tasks.</p>
                     </div>
 
                     <div class="comparison-grid">
@@ -1312,7 +1426,7 @@ print(result2)  # The area is approximately 78.54 square units</code></pre>
                             <h5>🔧 Technical Skills Developed</h5>
                             <ul>
                                 <li>JSON schema design and validation</li>
-                                <li>LiteLLM function calling implementation</li>
+                                <li>LiteLLM JSON mode implementation</li>
                                 <li>Tool registration and execution patterns</li>
                                 <li>Error handling and timeout management</li>
                                 <li>Conversation state management</li>
@@ -1334,7 +1448,7 @@ print(result2)  # The area is approximately 78.54 square units</code></pre>
                 <h3>Lab Session Focus</h3>
                 <p>In today's 2-hour lab, you will:</p>
                 <ul>
-                    <li><strong>Build a function calling system</strong> for extracting user data from natural language</li>
+                    <li><strong>Build a JSON mode system</strong> for extracting user data from natural language</li>
                     <li><strong>Create tool calling agents</strong> that can execute calculations and database operations</li>
                     <li><strong>Implement advanced tool orchestration</strong> with multiple integrated services</li>
                     <li><strong>Design agentic workflows</strong> that combine multiple tools for complex problem-solving</li>
@@ -1415,7 +1529,7 @@ print(result2)  # The area is approximately 78.54 square units</code></pre>
     <button class="scroll-to-top" id="scrollToTop" title="Scroll to Top">↑</button>
 
     <!-- JavaScript -->
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
         // Navigation functionality
         const navToggle = document.getElementById('navToggle');
         const navSidebar = document.getElementById('navSidebar');
